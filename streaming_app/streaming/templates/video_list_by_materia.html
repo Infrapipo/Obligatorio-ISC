@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} - Clases{% endblock %}
+{% block header %}
+    Videos de {{ materia.name }}
+    <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-button">Cerrar sesión</button>
+    </form>
+{% endblock %}
+{% load static %}
+
+{% block content %}
+    <a href="{% url 'video_materia_select' %}" class="back-button">⬅ Volver</a>
+
+    <div class="video-container">
+        {% for video in videos %}
+        <div class="video-card">
+            <h3>{{ video.title }}</h3>
+            <video class="video-player" controls poster="{% url 'video-thumbnail' video.id %}">
+                <source src="{{ video.file.url }}" type="video/mp4">
+                Tu navegador no soporta este formato de video.
+            </video>
+        </div>
+        {% empty %}
+        <p>No hay videos en esta categoría.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

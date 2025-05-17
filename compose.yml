@@ -1,0 +1,35 @@
+services:
+ db:
+   image: postgres:17.5
+   environment:
+     POSTGRES_DB: ${DATABASE_NAME}
+     POSTGRES_USER: ${DATABASE_USER}
+     POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+   ports:
+     - "5432:5432"
+   volumes:
+     - postgres_data:/var/lib/postgresql/data
+   env_file:
+     - .env
+ 
+ django-web:
+   image: django-app:v1
+   command: >
+    sh -c "python manage.py makemigrations &&
+           python manage.py migrate &&
+           gunicorn --bind 0.0.0.0:6969 --workers 4 main_project.wsgi:application"
+   ports:
+     - "6969:6969"
+   depends_on:
+     - db
+   environment:
+     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+     DATABASE_NAME: ${DATABASE_NAME}
+     DATABASE_USER: ${DATABASE_USER}
+     DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+     DATABASE_HOST: db
+     DATABASE_PORT: ${DATABASE_PORT}
+   env_file:
+     - .env
+volumes:
+   postgres_data:

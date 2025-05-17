@@ -1,0 +1,320 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin: 0;
+}
+
+/* Video Styles */
+video {
+    width: 100%;
+    /* height: 100%; */ /* Hace que el video ocupe toda la altura disponible dentro de la tarjeta */
+    object-fit: contain; /* Asegura que el video no se recorte y se ajuste al contenedor */
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos de pantalla completa */
+video:fullscreen {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Asegura que el video se ajuste a la pantalla completa sin distorsionarse */
+}
+
+/* Video Container */
+.video-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Ajuste el mínimo ancho de cada video */
+    gap: 20px; /* Espacio entre los videos */
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box; /* Asegura que el padding no haga que los elementos se desborden */
+    margin: 0; /* Elimina cualquier margen que pueda haber */
+    max-width: 100%; /* Asegura que el contenedor ocupe todo el ancho */
+    overflow: hidden; /* Evita que se desborde si hay elementos grandes */
+}
+
+.video-card {
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: auto;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+/* Estilo del texto */
+.video-card h3 {
+    flex: 0 0 auto;
+    font-size: 1.2em;
+    padding: 10px;
+    text-align: center;
+    word-wrap: break-word; /* Evita que el texto se salga */
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
+}
+
+/* Ajuste dinámico del video */
+.video-card video {
+    flex: 1;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: max-height 0.3s ease-in-out;
+}
+
+/* Cuando el texto es largo, reduce el tamaño del video */
+.video-card.expanded video {
+    max-height: 150px; /* Reduce la altura del video cuando hay mucho texto */
+}
+
+.video-container video {
+    width: 100%;
+    max-height: 100%;
+    flex-grow: 1; /* Permite que el video se ajuste al espacio disponible */
+    object-fit: contain; /* Asegura que el video se mantenga visible */
+}
+
+.video-card:hover {
+    transform: scale(1.05);
+}
+
+/* Ajuste de tamaño responsivo */
+@media (max-width: 600px) {
+    .video-card {
+        min-height: 200px;
+    }
+
+    .video-card video{
+        max-height: 150px;
+    }
+}
+
+/* Página de selección de materia */
+.category-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    align-items: flex-start; /* Asegura que los elementos se alineen correctamente */
+    max-width: 100%;
+}
+
+.category-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #333;
+    text-align: center;
+    font-size: 1.5em;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    width: auto; /* Para que se ajuste al contenido */
+    min-width: 200px; /* Asegura un tamaño mínimo */
+    max-width: 100%; /* Evita que se desborde */
+    word-wrap: break-word; /* Si el texto es largo, permite que se divida */
+}
+
+.category-card:hover {
+    transform: scale(1.1);
+}
+
+/* Botón para volver */
+.back-button {
+    display: inline-block;
+    margin: 10px;
+    padding: 10px 15px;
+    background-color: #555;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #333;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+}
+
+.logo a {
+    color: white;
+    font-size: 1.5em;
+    text-decoration: none;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1em;
+}
+
+.nav-links li a:hover {
+    text-decoration: underline;
+}
+
+/* Header */
+.main-header {
+    text-align: center;
+    padding: 50px;
+    background: linear-gradient(135deg, #6b73ff, #000dff);
+    color: white;
+}
+
+main {
+    padding: 20px;
+    max-width: 100%; /* Asegúrate de que el contenedor ocupe el 100% del ancho disponible */
+    box-sizing: border-box;
+    flex: 1;
+}
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px;
+    background: #222;
+    color: white;
+    margin-top: 50px;
+}
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Asegura que el cuerpo ocupe al menos el 100% de la altura de la ventana */
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px;
+    background: #222;
+    color: white;
+    margin-top: auto; /* Empuja el footer hacia el fondo */
+}
+/* Contenedor de autenticación */
+.auth-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+/* Títulos */
+.auth-container h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+/* Formulario */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Botón de autenticación */
+.auth-button {
+    background: linear-gradient(135deg, #6b73ff, #000dff);
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 1.2em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.auth-button:hover {
+    background: linear-gradient(135deg, #5a63e0, #000bcc);
+}
+
+/* Enlace de autenticación */
+.auth-link {
+    margin-top: 15px;
+    font-size: 1em;
+}
+
+.auth-link a {
+    color: #000dff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
+.logout-button {
+    color: #fff;
+    background-color: #e63946;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+}
+.logout-button:hover {
+    background-color: #d32f2f;
+}
+.errorlist {
+    color: red;
+    font-size: 0.9em;
+    display: none;  /* Inicialmente ocultamos los errores */
+}
+  
+.errorlist li {
+    list-style-type: none;
+}
+.messages {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+  
+.message {
+    margin-bottom: 10px;
+}
+

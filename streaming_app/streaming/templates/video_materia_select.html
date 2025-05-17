@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Selecciona una Materia{% endblock %}
+{% block header %}
+    Selecciona una Materia
+    <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-button">Cerrar sesión</button>
+    </form>
+{% endblock %}
+
+{% block content %}
+    <div class="category-container">
+        {% for materia in materias %}
+        <a href="{% url 'video_list_by_materia' materia.id %}" class="category-card">
+            <h2>{{ materia.name }}</h2>
+        </a>
+        {% empty %}
+        <p>No hay materias disponibles.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="auth-container">
+    <h2>Registro</h2>
+    <form method="post" class="auth-form">
+      {% csrf_token %}
+      
+      <!-- Campo de nombre de usuario -->
+      <div class="form-field">
+        <label for="id_username">Nombre de usuario:</label>
+        {{ form.username }}
+      </div>
+
+      <!-- Campo de correo electrónico -->
+      <div class="form-field">
+        <label for="id_email">Correo electrónico:</label>
+        {{ form.email }}
+      </div>
+
+      <!-- Campo de contraseña -->
+      <div class="form-field">
+        <label for="id_password1">Contraseña:</label>
+        {{ form.password1 }}
+      </div>
+
+      <!-- Campo de confirmación de contraseña -->
+      <div class="form-field">
+        <label for="id_password2">Confirmar Contraseña:</label>
+        {{ form.password2 }}
+      </div>
+
+      <!-- Botón de envío -->
+      <button type="submit" class="auth-button">Registrarse</button>
+    </form>
+
+    <p class="auth-link">
+      ¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a>
+    </p>
+  </div>
+{% endblock %}
+{% block extra_js %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const passwordField = document.querySelector('#id_password1');
+      const confirmPasswordField = document.querySelector('#id_password2');
+      const passwordError = document.querySelector('#id_password1 + .errorlist');
+      const confirmPasswordError = document.querySelector('#id_password2 + .errorlist');
+      
+      // Ocultar los mensajes de error al inicio
+      if (passwordError) passwordError.style.display = 'none';
+      if (confirmPasswordError) confirmPasswordError.style.display = 'none';
+
+      // Mostrar los mensajes de error si las contraseñas no coinciden
+      confirmPasswordField.addEventListener('blur', function() {
+        if (passwordField.value !== confirmPasswordField.value) {
+          if (passwordError) passwordError.style.display = 'block';
+          if (confirmPasswordError) confirmPasswordError.style.display = 'block';
+        } else {
+          if (passwordError) passwordError.style.display = 'none';
+          if (confirmPasswordError) confirmPasswordError.style.display = 'none';
+        }
+      });
+    });
+  </script>
+{% endblock %}
