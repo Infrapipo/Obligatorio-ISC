@@ -6,7 +6,7 @@ gunicorn==23.0.0
 numpy==2.2.3
 opencv-python==4.11.0.86
 packaging==24.2
-psycopg==3.2.6
+psycopg2-binary==2.9.10
 python-dotenv==1.0.1
 sqlparse==0.5.3
 typing_extensions==4.12.2

@@ -1,7 +1,7 @@
 # Étapa 1: Instalación de dependencias
-FROM python:3.12 AS installer
+FROM python:3.12-slim AS installer
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
       libgl1-mesa-glx \
       libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
@@ -24,12 +24,13 @@ RUN pip install --upgrade pip && \
    pip install --no-cache-dir -r requirements.txt
 
 # Étapa 2: Producción
-FROM python:3.12
+FROM python:3.12-slim
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libpq5 \
       libgl1-mesa-glx \
       libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/* &&\
+      && rm -rf /var/lib/apt/lists/* && \
     useradd -m -r django-user && \
     mkdir /app && \
     chown -R django-user /app
@@ -42,7 +43,7 @@ COPY --from=installer /usr/local/bin/ /usr/local/bin/
 WORKDIR /app
  
 # Copia el código de la aplicación
-COPY --chown=django-user:django-user ./streaming_app .
+COPY --chown=django-user:django-user /streaming_app .
  
 # Establece variables de entorno para optimizar el funcionamiento del intérprete de Python
 ENV PYTHONDONTWRITEBYTECODE=1

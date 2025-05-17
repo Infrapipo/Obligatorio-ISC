@@ -13,7 +13,7 @@ services:
      - .env
  
  django-web:
-   image: django-app:v1
+   image: django-app:v2
    command: >
     sh -c "python manage.py makemigrations &&
            python manage.py migrate &&
