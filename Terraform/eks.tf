@@ -3,24 +3,33 @@ module "eks" {
   version = "~> 20.0"
 
   cluster_name    = "obligatorio-isc"
-  cluster_version = "1.24"
+  cluster_version = "1.27"
+
 
   vpc_id                          = module.vpc.vpc_id
   subnet_ids                      = module.vpc.private_subnets
   cluster_endpoint_private_access = true
-  cluster_endpoint_public_access  = true
+  cluster_endpoint_public_access  = true #inseguro
 
   cluster_addons = {
     "vpc-cni" = {
-      version = "v1.10.0-eksbuild.1"
+
+      resolve_conflicts = "overwrite"
     }
+
     "coredns" = {
-      version = "v1.8.0-eksbuild.1"
+      resolve_conflicts = "overwrite"
     }
+
     "kube-proxy" = {
-      version = "v1.24.6-eksbuild.1"
+      resolve_conflicts = "overwrite"
+    }
+
+    csi = {
+      resolve_conflicts = "overwrite"
     }
   }
+
 
   eks_managed_node_groups = {
     node-group-1 = {
@@ -37,5 +46,5 @@ module "eks" {
       }
     }
   }
-  
+
 }
