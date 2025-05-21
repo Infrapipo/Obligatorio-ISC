@@ -1,0 +1,7 @@
+FROM nginx:latest
+
+COPY streming_project /etc/nginx/sites-available/
+
+RUN ln -s /etc/nginx/sites-available/streming_project /etc/nginx/sites-enabled/
+
+CMD [ "/usr/sbin/nginx", "-g", "daemon off;" ]
