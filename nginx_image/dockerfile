@@ -1,7 +1,11 @@
 FROM nginx:latest
 
-COPY streming_project /etc/nginx/sites-available/
+# Crear los directorios necesarios
+RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /etc/nginx/certs
 
-RUN ln -s /etc/nginx/sites-available/streming_project /etc/nginx/sites-enabled/
+COPY streaming_project fullchain.pem privkey.pem /etc/nginx/certs/
+
+RUN mv /etc/nginx/certs/streaming_project /etc/nginx/sites-available && \ 
+    ln -s /etc/nginx/sites-available/streaming_project /etc/nginx/sites-enabled/
 
 CMD [ "/usr/sbin/nginx", "-g", "daemon off;" ]
