@@ -1,0 +1,12 @@
+FROM python:3.12-alpine3.21
+
+RUN mkdir /app && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir django watchdog
+
+WORKDIR /app
+
+COPY monitor.py .env /app/
+
+CMD [ "python3.12","monitor.py"]
+
