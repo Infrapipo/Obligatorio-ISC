@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: Ingress-Django-Project
+  labels:
+    name: ingress
+spec:
+  rules:
+  - host: "clases.casapatera.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: django-web
+            port: 
+              number: 6969
+      - pathType: Prefix
+        path: "/static/"
+        backend:
+          service:
+            name: web-server
+            port: 
+              number: 80
+      - pathType: Prefix
+        path: "/media/"
+        backend:
+          service:
+            name: web-server
+            port: 
+              number: 80
+    
