@@ -1,8 +1,6 @@
 server {
-    listen 443 ssl;
+    listen 80;
     server_name clases.casapatera.com;
-    ssl_certificate /etc/nginx/certs/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/nginx/certs/privkey.pem; # managed by Certbot
 
 
     location /static/ {

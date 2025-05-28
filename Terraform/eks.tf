@@ -1,50 +1,20 @@
-module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+resource "aws_eks_cluster" "cluster" {
+  name     = "obligatorio-isc"
+  role_arn = "arn:aws:iam::882195442563:role/LabRole"
 
-  cluster_name    = "obligatorio-isc"
-  cluster_version = "1.27"
-
-
-  vpc_id                          = module.vpc.vpc_id
-  subnet_ids                      = module.vpc.private_subnets
-  cluster_endpoint_private_access = true
-  cluster_endpoint_public_access  = true #inseguro
-
-  cluster_addons = {
-    "vpc-cni" = {
-
-      resolve_conflicts = "overwrite"
-    }
-
-    "coredns" = {
-      resolve_conflicts = "overwrite"
-    }
-
-    "kube-proxy" = {
-      resolve_conflicts = "overwrite"
-    }
-
-    csi = {
-      resolve_conflicts = "overwrite"
-    }
+  vpc_config {
+    subnet_ids = module.vpc.private_subnets
   }
+}
+resource "aws_eks_node_group" "workers" {
+  cluster_name    = aws_eks_cluster.cluster.name
+  node_group_name = "obligatorio-isc-workers"
+  node_role_arn   = aws_eks_cluster.cluster.role_arn
+  subnet_ids      = module.vpc.private_subnets
 
-
-  eks_managed_node_groups = {
-    node-group-1 = {
-      desired_capacity = 1
-      max_size         = 3
-      min_size         = 1
-
-      instance_type = "t3.medium"
-      key_name      = "obligatorio-isc-key"
-
-      tags = {
-        Name        = "node-group-1"
-        Environment = "dev"
-      }
-    }
+  scaling_config {
+    desired_size = 2
+    max_size     = 3
+    min_size     = 1
   }
-
 }

@@ -17,7 +17,7 @@ module "vpc" {
 
 
   tags = {
-    Name        = "vpc-oblicatorio-isc"
+    Name        = "vpc-obligatorio-isc"
     Terraform   = "true"
     Environment = "dev"
   }
