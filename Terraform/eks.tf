@@ -18,3 +18,12 @@ resource "aws_eks_node_group" "workers" {
     min_size     = 1
   }
 }
+resource "kubectl_manifest" "deployment" {
+  yaml_body = file("manifests/deployments.yml")
+}
+resource "kubectl_manifest" "services" {
+  yaml_body = file("manifests/services.yml")  
+}
+resource "kubectl_manifest" "ingress" {
+  yaml_body = file("manifests/ingress.yml")
+}
