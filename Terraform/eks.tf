@@ -1,6 +1,6 @@
 resource "aws_eks_cluster" "cluster" {
   name     = "obligatorio-isc"
-  role_arn = "arn:aws:iam::882195442563:role/LabRole"
+  role_arn = data.aws_iam_role.eks_cluster_role.arn
 
   vpc_config {
     subnet_ids = module.vpc.private_subnets
