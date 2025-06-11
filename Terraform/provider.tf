@@ -8,3 +8,11 @@ data "aws_eks_cluster_auth" "cluster" {
 data "aws_iam_role" "eks_cluster_role" {
   name = "LabRole"
 }
+data "aws_eks_cluster_auth" "cluster" {
+  name = aws_eks_cluster.cluster.name
+}
+provider "kubectl" {
+  host = aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.cluster.certificate_authority[0].data)
+  token = data.aws_eks_cluster_auth.cluster.token
+}

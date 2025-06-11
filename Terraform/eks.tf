@@ -18,3 +18,20 @@ resource "aws_eks_node_group" "workers" {
     min_size     = 1
   }
 }
+resource "aws_ecr_repository" "respository-ecr" {
+  name = "obligatorio-isc-repository"
+  image_tag_mutability = "MUTABLE"
+  force_delete = true
+}
+resource "kubectl_manifest" "ingress_controller" {
+  yaml_body = file("manifests/ingress-controller.yml")
+}
+resource "kubectl_manifest" "deployment" {
+  yaml_body = file("manifests/deployments.yml")
+}
+resource "kubectl_manifest" "services" {
+  yaml_body = file("manifests/services.yml")  
+}
+resource "kubectl_manifest" "ingress" {
+  yaml_body = file("manifests/ingress.yml")
+}
