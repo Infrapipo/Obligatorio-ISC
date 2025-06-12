@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: StorageClass
+metadata:
+  name: StorageClassEFS
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  directoryPerms: "700"
+  gidRangeStart: "1000"
+  gidRangeEnd: "2000"
+  basePath: "/terraform/efs"
+  volumeType: "file-system"
+  fsGroupPolicy: "FileSystem"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ClaimEFS-Monitor-App
+spec:
+  storageClassName: StorageClassEFS
+  resources:
+    requests:
+      storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadOnlyMany
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ClaimEFS-Web-Server
+spec:
+  storageClassName: StorageClassEFS
+  resources:
+    requests:
+      storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadOnlyMany

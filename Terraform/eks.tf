@@ -6,6 +6,11 @@ resource "aws_eks_cluster" "cluster" {
     subnet_ids = module.vpc.private_subnets
   }
 }
+resource "aws_eks_addon" "efs-csi-driver" {
+  cluster_name = aws_eks_cluster.cluster.name
+  addon_name   = "efs-csi-driver"
+  # service_account_role_arn = data.aws_iam_role.eks_cluster_role.arn
+}
 resource "aws_eks_node_group" "workers" {
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "obligatorio-isc-workers"
