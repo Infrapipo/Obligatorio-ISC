@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: django-web
-        image: django-app:v2
+        image: ${DJANGO_APP_IMAGE}
         resources:
           requests:
             memory: "64Mi"
@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
       - name: web-server
-        image: nginx:v1
+        image: ${STATIC_SERVER_IMAGE}
         resources:
           requests:
             memory: "64Mi"
@@ -107,7 +107,7 @@ metadata:
 spec:
   containers:
   - name: efs-monitor
-    image: efs_monitor:v1
+    image: ${EFS_MONITOR_IMAGE}
     resources:
       requests:
         memory: "64Mi"

@@ -32,7 +32,11 @@ resource "kubectl_manifest" "ingress_controller" {
   yaml_body = file("manifests/ingress-controller.yml")
 }
 resource "kubectl_manifest" "deployment" {
-  yaml_body = file("manifests/deployments.yml")
+  yaml_body = templatefile("manifests/deployments.yml", {
+    EFS_MONITOR_IMAGE = aws_ecr_repository.respository-ecr.repository_url/"efs_monitor:v1"
+    STATIC_SERVER_IMAGE = aws_ecr_repository.respository-ecr.repository_url/"static_server:v1"
+    DJANGO_APP_IMAGE = aws_ecr_repository.respository-ecr.repository_url/"django-app:v2"
+  })
 }
 resource "kubectl_manifest" "services" {
   yaml_body = file("manifests/services.yml")  
