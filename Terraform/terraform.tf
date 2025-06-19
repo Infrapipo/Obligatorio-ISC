@@ -5,8 +5,12 @@ terraform {
       version = "~> 5.0"
     }
     kubectl = {
-      source  = "gavinbunney/kubectl"
-      version = "~> 1.7.0"
+      source  = "alekc/kubectl"
+      version = ">= 2.0.0"
+    }
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "3.6.1"
     }
   }
   

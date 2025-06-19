@@ -43,7 +43,7 @@ COPY --from=installer /usr/local/bin/ /usr/local/bin/
 WORKDIR /app
  
 # Copia el código de la aplicación
-COPY --chown=django-user:django-user /streaming_app .
+COPY --chown=django-user:django-user streaming_app/ .
  
 # Establece variables de entorno para optimizar el funcionamiento del intérprete de Python
 ENV PYTHONDONTWRITEBYTECODE=1

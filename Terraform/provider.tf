@@ -2,6 +2,14 @@ provider "aws" {
   region  = "us-east-1"
   profile = "default"
 }
+data "aws_ecr_authorization_token" "token" {}
+provider "docker" {
+  registry_auth {
+    address  = data.aws_ecr_authorization_token.token.proxy_endpoint
+    username = data.aws_ecr_authorization_token.token.user_name
+    password = data.aws_ecr_authorization_token.token.password
+    }
+}
 data "aws_eks_cluster_auth" "cluster" {
   name = aws_eks_cluster.cluster.name
 }
