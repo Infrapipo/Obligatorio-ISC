@@ -22,10 +22,10 @@ spec:
         image: ${DJANGO_APP_IMAGE}
         resources:
           requests:
-            memory: "64Mi"
+            memory: "256Mi"
             cpu: "250m"
           limits:
-            memory: "128Mi"
+            memory: "512Mi"
             cpu: "500m"
         ports:
         - containerPort: 6969
