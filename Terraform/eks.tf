@@ -63,10 +63,26 @@ resource "docker_registry_image" "django_app" {
   name       = docker_image.django_app.name
   depends_on = [aws_ecr_repository.respository-ecr]
 }
-resource "kubectl_manifest" "ingress_controller" {
-  provider = kubectl
-  yaml_body = file("manifests/ingress-controller.yml")
+# resource "kubectl_manifest" "ingress_controller" {
+#   provider = kubectl
+#   yaml_body = file("manifests/ingress-controller.yml")
+#   depends_on = [ aws_eks_addon.efs-csi-driver, 
+#     aws_eks_node_group.workers, 
+#     aws_eks_cluster.cluster]
+# }
+
+resource "null_resource" "apply_ingress_controller" {
+  depends_on = [
+    aws_eks_addon.efs-csi-driver,
+    aws_eks_node_group.workers,
+    aws_eks_cluster.cluster,
+  ]
+
+  provisioner "local-exec" {
+    command = "kubectl apply --validate=false -f manifests/ingress-controller.yml"
+  }
 }
+
 resource "kubectl_manifest" "deployment" {
   provider = kubectl
   yaml_body = templatefile("manifests/deployments.yml", {
@@ -80,14 +96,21 @@ resource "kubectl_manifest" "deployment" {
       docker_registry_image.django_app]
 }
 resource "kubectl_manifest" "services" {
+  provider = kubectl
   yaml_body = file("manifests/services.yml")
-  
+  depends_on = [ kubectl_manifest.deployment, 
+    ]
 }
 resource "kubectl_manifest" "ingress" {
+  provider = kubectl
   yaml_body = file("manifests/ingress.yml")
-  
+  depends_on = [ kubectl_manifest.services ]
 }
 resource "kubectl_manifest" "volume" {
+  provider = kubectl
   yaml_body = file("manifests/volume.yml")
-  
+    depends_on = [
+    aws_eks_addon.efs-csi-driver,
+    aws_eks_node_group.workers
+  ]
 }
