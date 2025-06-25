@@ -34,7 +34,9 @@ resource "docker_image" "efs_monitor" {
   name = "${aws_ecr_repository.respository-ecr.repository_url}:efs_monitor-v1"
   build {
     context    = "../efs_monitor"
-    dockerfile = "../efs_monitor/dockerfile"
+    dockerfile = templatefile("../efs_monitor/dockerfile", {
+      EFS_SHARE = aws_efs_file_system.share-efs.name
+    })
   }
 }
 resource "docker_image" "static_server" {
@@ -101,7 +103,6 @@ resource "null_resource" "wait_for_nodes" {
     echo "Tiempo de espera agotado, nodos no disponibles"
     exit 1
     EOT
-    interpreter = ["/bin/bash", "-c"]
   }
 }
 resource "null_resource" "apply_ingress_controller" {
@@ -116,35 +117,44 @@ resource "null_resource" "apply_ingress_controller" {
     command = "kubectl apply --validate=false -f manifests/ingress-controller.yml"
   }
 }
-
-resource "kubectl_manifest" "deployment" {
-  provider = kubectl
-  yaml_body = templatefile("manifests/deployments.yml", {
-    EFS_MONITOR_IMAGE   = docker_image.efs_monitor.name,
-    STATIC_SERVER_IMAGE = docker_image.static_server.name,
-    DJANGO_APP_IMAGE    = docker_image.django_app.name
+resource "kubectl_manifest" "deployment-django-web" {
+  yaml_body = templatefile("manifests/deployments/django-web.yml", {
+    DJANGO_APP_IMAGE    = docker_registry_image.django_app.name,
   })
-  depends_on = [
-    docker_registry_image.efs_monitor,
-    docker_registry_image.static_server,
-  docker_registry_image.django_app]
+  depends_on = [docker_registry_image.django_app]
 }
-resource "kubectl_manifest" "services" {
-  provider  = kubectl
-  yaml_body = file("manifests/services.yml")
-  depends_on = [kubectl_manifest.deployment,
-  ]
+# resource "kubectl_manifest" "deployment-postgres" {
+#   yaml_body = file("manifests/deployments/postgres.yml")
+# }
+resource "kubectl_manifest" "deployment-web-server" {
+  yaml_body = templatefile("manifests/deployments/web-server.yml", {
+    STATIC_SERVER_IMAGE = docker_registry_image.static_server.name,
+  })
+  depends_on = [docker_registry_image.static_server]
 }
-resource "kubectl_manifest" "ingress" {
-  provider   = kubectl
-  yaml_body  = file("manifests/ingress.yml")
-  depends_on = [kubectl_manifest.services]
+resource "kubectl_manifest" "deployment-efs-monitor" {
+  yaml_body = templatefile("manifests/deployments/efs-monitor-pod.yml", {
+    EFS_MONITOR_IMAGE   = docker_registry_image.efs_monitor.name,
+  })
+  depends_on = [docker_registry_image.efs_monitor]
 }
-resource "kubectl_manifest" "volume" {
-  provider  = kubectl
-  yaml_body = file("manifests/volume.yml")
-  depends_on = [
-    aws_eks_addon.efs-csi-driver,
-    aws_eks_node_group.workers
-  ]
-}
+# resource "kubectl_manifest" "services" {
+#   yaml_body = file("manifests/services.yml")
+#   depends_on = [
+#     kubectl_manifest.deployment-django-web,
+#     kubectl_manifest.deployment-postgres,
+#     kubectl_manifest.deployment-web-server,
+#     kubectl_manifest.deployment-efs-monitor,
+#   ]
+# }
+# resource "kubectl_manifest" "ingress" {
+#   yaml_body  = file("manifests/ingress.yml")
+#   depends_on = [kubectl_manifest.services]
+# }
+# resource "kubectl_manifest" "volume" {
+#   yaml_body = file("manifests/volume.yml")
+#   depends_on = [
+#     aws_eks_addon.efs-csi-driver,
+#     aws_eks_node_group.workers
+#   ]
+# }

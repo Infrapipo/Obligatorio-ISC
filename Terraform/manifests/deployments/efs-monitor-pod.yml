@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-monitor
+  labels:
+    name: efs-monitor
+spec:
+  containers:
+  - name: efs-monitor
+    image: ${EFS_MONITOR_IMAGE}
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  volumes:
+  - name: efs-volume
+    persistentVolumeClaim:
+      claimName: ClaimEFS-Monitor-App

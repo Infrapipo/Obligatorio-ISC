@@ -4,12 +4,10 @@ server {
 
 
     location /static/ {
-        alias /home/juan/streaming_platform/streaming/static/;
-
+        alias /static/;
     }
 
     location /media/ {
-        alias /home/juan/streaming_platform/streaming/media/;
-
+        alias /mnt/efs/media/;
     }
 }
