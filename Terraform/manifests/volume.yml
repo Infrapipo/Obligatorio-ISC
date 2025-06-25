@@ -9,31 +9,31 @@ parameters:
   gidRangeStart: "1000"
   gidRangeEnd: "2000"
   basePath: "/terraform/efs"
-  volumeType: "file-system"
-  fsGroupPolicy: "FileSystem"
+reclaimPolicy: Retain
+mountOptions:
+  - tls
+volumeBindingMode: Immediate
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ClaimEFS-Monitor-App
+  name: claimefs-monitor-app
 spec:
+  accessModes:
+    - ReadWriteMany
   storageClassName: storage-class-efs
   resources:
     requests:
       storage: 10Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadOnlyMany
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ClaimEFS-Web-Server
+  name: claimefs-web-server
 spec:
+  accessModes:
+    - ReadWriteMany
   storageClassName: storage-class-efs
   resources:
     requests:
       storage: 10Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadOnlyMany

@@ -35,7 +35,7 @@ resource "docker_image" "efs_monitor" {
   build {
     context    = "../efs_monitor"
     dockerfile = templatefile("../efs_monitor/dockerfile", {
-      EFS_SHARE = aws_efs_file_system.share-efs.name
+      EFS_SHARE = aws_efs_file_system.share-efs.id
     })
   }
 }
@@ -65,48 +65,7 @@ resource "docker_registry_image" "django_app" {
   name       = docker_image.django_app.name
   depends_on = [aws_ecr_repository.respository-ecr]
 }
-# resource "kubectl_manifest" "ingress_controller1" {
-#   provider  = kubectl
-#   yaml_body = file("manifests/ingress-controller-services.yml")
-#   depends_on = [aws_eks_addon.efs-csi-driver,
-#     aws_eks_node_group.workers,
-#   aws_eks_cluster.cluster]
-# }
-# resource "kubectl_manifest" "ingress_controller2" {
-#   provider  = kubectl
-#   yaml_body = file("manifests/ingress-controller-deploy.yml")
-#   depends_on = [aws_eks_addon.efs-csi-driver,
-#     aws_eks_node_group.workers,
-#     aws_eks_cluster.cluster,
-#   kubectl_manifest.ingress_controller1]
-# }
 
-
-resource "null_resource" "wait_for_nodes" {
-  depends_on = [
-    aws_eks_node_group.workers,
-    aws_eks_addon.efs-csi-driver
-  ]
-
-  provisioner "local-exec" {
-    command = <<EOT
-    echo "Esperando a que los nodos estén listos..."
-    aws eks --region us-east-1 update-kubeconfig --name obligatorio-isc
-    for i in {1..30}; do
-      
-      READY_NODES=$(kubectl get nodes --no-headers 2>/dev/null | grep -c ' Ready')
-      if [ "$READY_NODES" -ge 1 ]; then
-        echo "Nodos listos: $READY_NODES"
-        exit 0
-      fi
-      echo "Esperando nodos... intento $i"
-      sleep 10
-    done
-    echo "Tiempo de espera agotado, nodos no disponibles"
-    exit 1
-    EOT
-  }
-}
 resource "kubectl_manifest" "apply_ingress_controller" {
 
   yaml_body = file("manifests/ingress-controller.yml")
@@ -115,7 +74,6 @@ resource "kubectl_manifest" "apply_ingress_controller" {
     aws_eks_addon.efs-csi-driver,
     aws_eks_node_group.workers,
     aws_eks_cluster.cluster,
-    null_resource.wait_for_nodes
   ]
 }
 resource "kubectl_manifest" "deployment-django-web" {
@@ -139,23 +97,23 @@ resource "kubectl_manifest" "deployment-efs-monitor" {
   })
   depends_on = [docker_registry_image.efs_monitor]
 }
-# resource "kubectl_manifest" "services" {
-#   yaml_body = file("manifests/services.yml")
-#   depends_on = [
-#     kubectl_manifest.deployment-django-web,
-#     kubectl_manifest.deployment-postgres,
-#     kubectl_manifest.deployment-web-server,
-#     kubectl_manifest.deployment-efs-monitor,
-#   ]
-# }
-# resource "kubectl_manifest" "ingress" {
-#   yaml_body  = file("manifests/ingress.yml")
-#   depends_on = [kubectl_manifest.services]
-# }
-# resource "kubectl_manifest" "volume" {
-#   yaml_body = file("manifests/volume.yml")
-#   depends_on = [
-#     aws_eks_addon.efs-csi-driver,
-#     aws_eks_node_group.workers
-#   ]
-# }
+resource "kubectl_manifest" "services" {
+  yaml_body = file("manifests/services.yml")
+  depends_on = [
+    kubectl_manifest.deployment-django-web,
+    kubectl_manifest.deployment-postgres,
+    kubectl_manifest.deployment-web-server,
+    kubectl_manifest.deployment-efs-monitor,
+  ]
+}
+resource "kubectl_manifest" "ingress" {
+  yaml_body  = file("manifests/ingress.yml")
+  depends_on = [kubectl_manifest.services]
+}
+resource "kubectl_manifest" "volume" {
+  yaml_body = file("manifests/volume.yml")
+  depends_on = [
+    aws_eks_addon.efs-csi-driver,
+    aws_eks_node_group.workers
+  ]
+}
