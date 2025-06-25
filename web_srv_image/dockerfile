@@ -1,7 +1,7 @@
 FROM nginx:latest
 
 # Crear los directorios necesarios
-RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /mnt/efs
+RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /mnt/efs /static
 
 COPY streaming_project /etc/nginx/sites-available/streaming_project
 
