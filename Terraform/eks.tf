@@ -65,21 +65,7 @@ resource "docker_registry_image" "django_app" {
   name       = docker_image.django_app.name
   depends_on = [aws_ecr_repository.respository-ecr]
 }
-# resource "kubectl_manifest" "ingress_controller1" {
-#   provider  = kubectl
-#   yaml_body = file("manifests/ingress-controller-services.yml")
-#   depends_on = [aws_eks_addon.efs-csi-driver,
-#     aws_eks_node_group.workers,
-#   aws_eks_cluster.cluster]
-# }
-# resource "kubectl_manifest" "ingress_controller2" {
-#   provider  = kubectl
-#   yaml_body = file("manifests/ingress-controller-deploy.yml")
-#   depends_on = [aws_eks_addon.efs-csi-driver,
-#     aws_eks_node_group.workers,
-#     aws_eks_cluster.cluster,
-#   kubectl_manifest.ingress_controller1]
-# }
+
 resource "null_resource" "wait_for_nodes" {
   depends_on = [
     aws_eks_node_group.workers,
@@ -105,17 +91,16 @@ resource "null_resource" "wait_for_nodes" {
     EOT
   }
 }
-resource "null_resource" "apply_ingress_controller" {
+resource "kubectl_manifest" "apply_ingress_controller" {
+
+  yaml_body = file("manifests/ingress-controller.yml")
+
   depends_on = [
     aws_eks_addon.efs-csi-driver,
     aws_eks_node_group.workers,
     aws_eks_cluster.cluster,
     null_resource.wait_for_nodes
   ]
-
-  provisioner "local-exec" {
-    command = "kubectl apply --validate=false -f manifests/ingress-controller.yml"
-  }
 }
 resource "kubectl_manifest" "deployment-django-web" {
   yaml_body = templatefile("manifests/deployments/django-web.yml", {
@@ -123,9 +108,9 @@ resource "kubectl_manifest" "deployment-django-web" {
   })
   depends_on = [docker_registry_image.django_app]
 }
-# resource "kubectl_manifest" "deployment-postgres" {
-#   yaml_body = file("manifests/deployments/postgres.yml")
-# }
+resource "kubectl_manifest" "deployment-postgres" {
+  yaml_body = file("manifests/deployments/postgres.yml")
+}
 resource "kubectl_manifest" "deployment-web-server" {
   yaml_body = templatefile("manifests/deployments/web-server.yml", {
     STATIC_SERVER_IMAGE = docker_registry_image.static_server.name,
