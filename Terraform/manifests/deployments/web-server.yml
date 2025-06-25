@@ -20,18 +20,6 @@ spec:
       containers:
       - name: web-server
         image: ${STATIC_SERVER_IMAGE}
-        startupProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
-          periodSeconds: 3
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
-          periodSeconds: 3
         resources:
           requests:
             memory: "512Mi"
@@ -41,8 +29,10 @@ spec:
             cpu: "2000m"
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: efs-volume
+          mountPath: /mnt/efs
       volumes:
       - name: efs-volume
-        mountPath: /mnt/efs
         persistentVolumeClaim:
           claimName: ClaimEFS-Web-Server
