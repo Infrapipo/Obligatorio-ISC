@@ -32,4 +32,8 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+      volumes:
+        - name: postgres-volume
+          persistentVolumeClaim:
+            claimName: postgres-pvc
          

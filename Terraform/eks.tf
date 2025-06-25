@@ -118,22 +118,13 @@ resource "kubectl_manifest" "web_server_service" {
 
 resource "kubectl_manifest" "ingress" {
   yaml_body  = file("manifests/ingress.yml")
-  depends_on = [kubectl_manifest.services]
-}
-resource "kubectl_manifest" "volume" {
-  yaml_body = templatefile("${path.module}/manifests/volume.yml", {
-    efs_id = aws_efs_file_system.share-efs.id
-  })
-
-  depends_on = [
-    aws_efs_file_system.share-efs,
-    aws_eks_addon.efs-csi-driver,
-    aws_eks_node_group.workers
-  ]
+  depends_on = [kubectl_manifest.django_app_service,
+  kubectl_manifest.web_server_service,
+  kubectl_manifest.postgres_service]
 }
 
-resource "kubectl_manifest" "efs_storage_class" {
-  yaml_body = templatefile("${path.module}/manifests/storage/efs-storage-class.yml", {
+resource "kubectl_manifest" "efs_persistent_volume" {
+  yaml_body = templatefile("manifests/storage/efs-persistent-volume.yml", {
     efs_id = aws_efs_file_system.share-efs.id
   })
   depends_on = [
@@ -143,11 +134,11 @@ resource "kubectl_manifest" "efs_storage_class" {
 }
 
 resource "kubectl_manifest" "pvc_monitor" {
-  yaml_body = file("${path.module}/manifests/storage/pvc-monitor-app.yml")
-  depends_on = [kubectl_manifest.efs_storage_class]
+  yaml_body = file("manifests/storage/pvc-monitor-app.yml")
+  depends_on = [kubectl_manifest.efs_persistent_volume]
 }
 
 resource "kubectl_manifest" "pvc_web_server" {
-  yaml_body = file("${path.module}/manifests/storage/pvc-web-server.yml")
-  depends_on = [kubectl_manifest.efs_storage_class]
+  yaml_body = file("manifests/storage/pvc-web-server.yml")
+  depends_on = [kubectl_manifest.efs_persistent_volume]
 }
