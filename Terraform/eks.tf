@@ -34,9 +34,7 @@ resource "docker_image" "efs_monitor" {
   name = "${aws_ecr_repository.respository-ecr.repository_url}:efs_monitor-v1"
   build {
     context    = "../efs_monitor"
-    dockerfile = templatefile("../efs_monitor/dockerfile", {
-      EFS_SHARE = aws_efs_file_system.share-efs.id
-    })
+    dockerfile = "../efs_monitor/dockerfile"
   }
 }
 resource "docker_image" "static_server" {
@@ -80,22 +78,28 @@ resource "kubectl_manifest" "deployment-django-web" {
   yaml_body = templatefile("manifests/deployments/django-web.yml", {
     DJANGO_APP_IMAGE    = docker_registry_image.django_app.name,
   })
-  depends_on = [docker_registry_image.django_app]
+  depends_on = [docker_registry_image.django_app,
+  aws_eks_addon.efs-csi-driver,]
 }
 resource "kubectl_manifest" "deployment-postgres" {
   yaml_body = file("manifests/deployments/postgres.yml")
+  depends_on = [aws_eks_addon.efs-csi-driver,
+  aws_eks_node_group.workers,
+  aws_efs_file_system.share-efs,]
 }
 resource "kubectl_manifest" "deployment-web-server" {
   yaml_body = templatefile("manifests/deployments/web-server.yml", {
     STATIC_SERVER_IMAGE = docker_registry_image.static_server.name,
   })
-  depends_on = [docker_registry_image.static_server]
+  depends_on = [docker_registry_image.static_server,
+  aws_eks_addon.efs-csi-driver]
 }
 resource "kubectl_manifest" "deployment-efs-monitor" {
   yaml_body = templatefile("manifests/deployments/efs-monitor-pod.yml", {
     EFS_MONITOR_IMAGE   = docker_registry_image.efs_monitor.name,
   })
-  depends_on = [docker_registry_image.efs_monitor]
+  depends_on = [docker_registry_image.efs_monitor,
+  aws_eks_addon.efs-csi-driver]
 }
 resource "kubectl_manifest" "services" {
   yaml_body = file("manifests/services.yml")
@@ -111,9 +115,33 @@ resource "kubectl_manifest" "ingress" {
   depends_on = [kubectl_manifest.services]
 }
 resource "kubectl_manifest" "volume" {
-  yaml_body = file("manifests/volume.yml")
+  yaml_body = templatefile("${path.module}/manifests/volume.tpl.yml", {
+    efs_id = aws_efs_file_system.share-efs.id
+  })
+
   depends_on = [
+    aws_efs_file_system.share-efs,
     aws_eks_addon.efs-csi-driver,
     aws_eks_node_group.workers
   ]
+}
+
+resource "kubectl_manifest" "efs_storage_class" {
+  yaml_body = templatefile("${path.module}/manifests/efs-storage-class.tpl.yml", {
+    efs_id = aws_efs_file_system.share-efs.id
+  })
+  depends_on = [
+    aws_efs_file_system.share-efs,
+    aws_eks_addon.efs-csi-driver
+  ]
+}
+
+resource "kubectl_manifest" "pvc_monitor" {
+  yaml_body = file("${path.module}/manifests/pvc-monitor-app.yml")
+  depends_on = [kubectl_manifest.efs_storage_class]
+}
+
+resource "kubectl_manifest" "pvc_web_server" {
+  yaml_body = file("${path.module}/manifests/pvc-web-server.yml")
+  depends_on = [kubectl_manifest.efs_storage_class]
 }
