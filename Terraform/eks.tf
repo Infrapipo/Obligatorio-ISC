@@ -101,21 +101,27 @@ resource "kubectl_manifest" "deployment-efs-monitor" {
   depends_on = [docker_registry_image.efs_monitor,
   aws_eks_addon.efs-csi-driver]
 }
-resource "kubectl_manifest" "services" {
-  yaml_body = file("manifests/services.yml")
-  depends_on = [
-    kubectl_manifest.deployment-django-web,
-    kubectl_manifest.deployment-postgres,
-    kubectl_manifest.deployment-web-server,
-    kubectl_manifest.deployment-efs-monitor,
-  ]
+resource "kubectl_manifest" "django_app_service" {
+  yaml_body = file("manifests/services/django-web.yml")
+  depends_on = [kubectl_manifest.deployment-django-web]
+  
 }
+resource "kubectl_manifest" "postgres_service" {
+  yaml_body = file("manifests/services/postgres.yml")
+  depends_on = [kubectl_manifest.deployment-postgres]
+}
+resource "kubectl_manifest" "web_server_service" {
+  yaml_body = file("manifests/services/web-server.yml")
+  depends_on = [kubectl_manifest.deployment-web-server]
+}
+
+
 resource "kubectl_manifest" "ingress" {
   yaml_body  = file("manifests/ingress.yml")
   depends_on = [kubectl_manifest.services]
 }
 resource "kubectl_manifest" "volume" {
-  yaml_body = templatefile("${path.module}/manifests/volume.tpl.yml", {
+  yaml_body = templatefile("${path.module}/manifests/volume.yml", {
     efs_id = aws_efs_file_system.share-efs.id
   })
 
@@ -127,7 +133,7 @@ resource "kubectl_manifest" "volume" {
 }
 
 resource "kubectl_manifest" "efs_storage_class" {
-  yaml_body = templatefile("${path.module}/manifests/efs-storage-class.tpl.yml", {
+  yaml_body = templatefile("${path.module}/manifests/storage/efs-storage-class.yml", {
     efs_id = aws_efs_file_system.share-efs.id
   })
   depends_on = [
@@ -137,11 +143,11 @@ resource "kubectl_manifest" "efs_storage_class" {
 }
 
 resource "kubectl_manifest" "pvc_monitor" {
-  yaml_body = file("${path.module}/manifests/pvc-monitor-app.yml")
+  yaml_body = file("${path.module}/manifests/storage/pvc-monitor-app.yml")
   depends_on = [kubectl_manifest.efs_storage_class]
 }
 
 resource "kubectl_manifest" "pvc_web_server" {
-  yaml_body = file("${path.module}/manifests/pvc-web-server.yml")
+  yaml_body = file("${path.module}/manifests/storage/pvc-web-server.yml")
   depends_on = [kubectl_manifest.efs_storage_class]
 }

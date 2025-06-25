@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claimefs-monitor-app
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: storage-class-efs
+  resources:
+    requests:
+      storage: 10Gi
