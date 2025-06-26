@@ -5,8 +5,8 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  volumeName: efs-pv-postgres
-  storageClassName: ""
+  volumeName: postgres-pv
+  storageClassName: manual-nfs
   resources:
     requests:
       storage: 20Gi

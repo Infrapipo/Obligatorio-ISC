@@ -42,4 +42,11 @@ spec:
           value: "postgres-db"
         - name: DJANGO_SECRET_KEY
           value: "${DJANGO_SECRET_KEY}"
+        volumeMounts:
+        - name: static-files
+          mountPath: /app/static   # o /app/media si lo usás así
+      volumes:
+      - name: static-files
+        persistentVolumeClaim:
+          claimName: claimefs-web-server
 

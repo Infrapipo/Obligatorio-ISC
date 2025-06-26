@@ -16,9 +16,9 @@ spec:
         memory: "128Mi"
         cpu: "500m"
     volumeMounts:
-      - name: efs-volume
+      - name: ec2-volume
         mountPath: ${DIRECTORY_TO_WATCH}
   volumes:
-  - name: efs-volume
+  - name: ec2-volume
     persistentVolumeClaim:
-      claimName: claimefs-monitor-app
+      claimName: claim-nfs-monitor-app
