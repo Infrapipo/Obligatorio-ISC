@@ -5,6 +5,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
+  volumeName: efs-pv
   storageClassName: ""
   resources:
     requests:

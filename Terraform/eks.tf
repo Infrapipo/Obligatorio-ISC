@@ -90,7 +90,7 @@ resource "kubectl_manifest" "deployment-postgres" {
   yaml_body = file("manifests/deployments/postgres.yml")
   depends_on = [aws_eks_addon.efs-csi-driver,
   aws_eks_node_group.workers,
-  aws_efs_file_system.share-efs,]
+  aws_efs_file_system.share-efs]
 }
 resource "kubectl_manifest" "deployment-web-server" {
   yaml_body = templatefile("manifests/deployments/web-server.yml", {
@@ -102,6 +102,7 @@ resource "kubectl_manifest" "deployment-web-server" {
 resource "kubectl_manifest" "deployment-efs-monitor" {
   yaml_body = templatefile("manifests/deployments/efs-monitor-pod.yml", {
     EFS_MONITOR_IMAGE   = docker_registry_image.efs_monitor.name,
+    DIRECTORY_TO_WATCH = "/mnt/efs/videos",
   })
   depends_on = [docker_registry_image.efs_monitor,
   aws_eks_addon.efs-csi-driver]
@@ -127,8 +128,8 @@ resource "kubectl_manifest" "ingress" {
   kubectl_manifest.postgres_service]
 }
 
-resource "kubectl_manifest" "efs_persistent_volume" {
-  yaml_body = templatefile("manifests/storage/efs-persistent-volume.yml", {
+resource "kubectl_manifest" "efs_pv_monitor" {
+  yaml_body = templatefile("manifests/storage/efs-pv-monitor.yml", {
     efs_id = aws_efs_file_system.share-efs.id
   })
   depends_on = [
@@ -136,13 +137,36 @@ resource "kubectl_manifest" "efs_persistent_volume" {
     aws_eks_addon.efs-csi-driver
   ]
 }
+resource "kubectl_manifest" "efs-pv-web" {
+  yaml_body = templatefile("manifests/storage/efs-pv-web.yml", {
+    efs_id = aws_efs_file_system.share-efs.id
+  })
+  depends_on = [
+    aws_efs_file_system.share-efs,
+    aws_eks_addon.efs-csi-driver
+  ]
+}
+resource "kubectl_manifest" "efs-pv-postgres" {
+  yaml_body = templatefile("manifests/storage/efs-pv-postgres.yml", {
+    efs_id = aws_efs_file_system.postgres-efs.id
+  })
+  depends_on = [
+    aws_efs_file_system.postgres-efs,
+    aws_eks_addon.efs-csi-driver
+  ]
+}
 
 resource "kubectl_manifest" "pvc_monitor" {
   yaml_body = file("manifests/storage/pvc-monitor-app.yml")
-  depends_on = [kubectl_manifest.efs_persistent_volume]
+  depends_on = [kubectl_manifest.efs_pv_monitor]
 }
 
 resource "kubectl_manifest" "pvc_web_server" {
   yaml_body = file("manifests/storage/pvc-web-server.yml")
-  depends_on = [kubectl_manifest.efs_persistent_volume]
+  depends_on = [kubectl_manifest.efs-pv-web]
+}
+
+resource "kubectl_manifest" "pvc_postgres" {
+  yaml_body = file("manifests/storage/pvc-postgres.yml")
+  depends_on = [kubectl_manifest.efs-pv-postgres]
 }
