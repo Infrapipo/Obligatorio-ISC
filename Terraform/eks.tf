@@ -13,27 +13,20 @@ resource "aws_eks_node_group" "workers" {
   node_group_name = "obligatorio-isc-workers"
   node_role_arn   = aws_eks_cluster.cluster.role_arn
   subnet_ids      = module.vpc.private_subnets
-  launch_template {
-    id      = aws_launch_template.lt-node-group.id
-    version = "$Latest"
+
+  remote_access {
+    ec2_ssh_key = "vockey"
+    source_security_group_ids = [aws_security_group.sg-node-group.id]
   }
   scaling_config {
     desired_size = 2
     max_size     = 3
     min_size     = 1
   }
-  depends_on = [ aws_ec2_instance.nfs_server ]
+  depends_on = [ aws_instance.nfs_server ]
 }
- resource "aws_launch_template" "lt-node-group" {
-  name_prefix   = "lt-node-group"
-  instance_type = "t3.medium"
-  network_interfaces {
-    associate_public_ip_address = false
-    security_groups              = [aws_security_group.sg-node-group.id]
-  }
- }
- 
- resource "aws_security_group" "sg-node-group" {
+
+resource "aws_security_group" "sg-node-group" {
   name        = "eks-node-group-sg"
   description = "Security group for EKS node group"
   vpc_id      = module.vpc.vpc_id

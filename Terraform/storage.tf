@@ -43,37 +43,26 @@ resource "aws_instance" "nfs_server" {
               sudo exportfs -v
 
               EOF
-
-}
-
-data "template_file" "pv_web" {
-  template = file("manifests/storage/pv-web-server-ec2.yml")
-  vars = {
-    nfs_server_ip = aws_instance.nfs_server.private_ip
+  tags = {
+    Name = "nfs-server"
   }
+
 }
 
 resource "kubectl_manifest" "pv_web" {
-  yaml_body = data.template_file.pv_web.rendered
-}
-
-data "template_file" "pv_monitor" {
-  template = file("manifests/storage/pv-monitor-ec2.yml")
-  vars = {
+  yaml_body = templatefile("manifests/storage/pv-web-server-ec2.yml", {
     nfs_server_ip = aws_instance.nfs_server.private_ip
-  }
+  })
 }
 resource "kubectl_manifest" "pv_monitor" {
-  yaml_body = data.template_file.pv_monitor.rendered
-}
-data "template_file" "pv_postgres" {
-  template = file("manifests/storage/pv-postgres-ec2.yml")
-  vars = {
+  yaml_body = templatefile("manifests/storage/pv-monitor-ec2.yml", {
     nfs_server_ip = aws_instance.nfs_server.private_ip
-  }
+  })
 }
 resource "kubectl_manifest" "pv_postgres" {
-  yaml_body = data.template_file.pv_postgres.rendered
+  yaml_body = templatefile("manifests/storage/pv-postgres-ec2.yml", {
+    nfs_server_ip = aws_instance.nfs_server.private_ip
+  })
 }
 resource "aws_security_group" "nfs_sg" {
   name        = "nfs_sg"
