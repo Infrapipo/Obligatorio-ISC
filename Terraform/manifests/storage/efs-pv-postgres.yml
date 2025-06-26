@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: pv-postgres
+  name: efs-pv-postgres
 spec:
   capacity:
     storage: 20Gi
