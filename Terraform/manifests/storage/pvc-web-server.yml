@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: claimefs-web-server
+  name: claim-s3-web-server
 spec:
   accessModes:
     - ReadWriteMany
-  volumeName: efs-pv-web
-  storageClassName: ""
+  storageClassName: s3-storage-class
   resources:
     requests:
       storage: 20Gi

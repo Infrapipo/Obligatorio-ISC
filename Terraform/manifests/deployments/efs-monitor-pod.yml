@@ -21,4 +21,4 @@ spec:
   volumes:
   - name: efs-volume
     persistentVolumeClaim:
-      claimName: claimefs-monitor-app
+      claimName: claim-s3-monitor-app

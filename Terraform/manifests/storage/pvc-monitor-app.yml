@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: claimefs-monitor-app
+  name: claim-s3-monitor-app
 spec:
   accessModes:
     - ReadWriteMany
-  volumeName: efs-pv-monitor
-  storageClassName: ""
+  storageClassName: s3-storage-class
   resources:
     requests:
       storage: 20Gi

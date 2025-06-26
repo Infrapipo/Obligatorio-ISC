@@ -35,4 +35,4 @@ spec:
       volumes:
       - name: efs-volume
         persistentVolumeClaim:
-          claimName: claimefs-web-server
+          claimName: claim-s3-web-server

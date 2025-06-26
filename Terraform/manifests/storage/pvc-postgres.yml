@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: claim-s3-postgres
 spec:
   accessModes:
     - ReadWriteMany
-  volumeName: efs-pv-postgres
-  storageClassName: ""
+  storageClassName: s3-storage-class
   resources:
     requests:
       storage: 20Gi

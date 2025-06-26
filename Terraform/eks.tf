@@ -8,9 +8,9 @@ resource "aws_eks_cluster" "cluster" {
     endpoint_public_access = true
   }
 }
-resource "aws_eks_addon" "efs-csi-driver" {
+resource "aws_eks_addon" "s3-csi-driver" {
   cluster_name             = aws_eks_cluster.cluster.name
-  addon_name               = "aws-efs-csi-driver"
+  addon_name               = "aws-mountpoint-s3-csi-driver"
   service_account_role_arn = data.aws_iam_role.eks_cluster_role.arn
 }
 resource "aws_eks_node_group" "workers" {
@@ -69,7 +69,7 @@ resource "kubectl_manifest" "apply_ingress_controller" {
   yaml_body = file("manifests/ingress-controller.yml")
 
   depends_on = [
-    aws_eks_addon.efs-csi-driver,
+    aws_eks_addon.s3-csi-driver,
     aws_eks_node_group.workers,
     aws_eks_cluster.cluster,
   ]
@@ -84,7 +84,7 @@ resource "kubectl_manifest" "deployment-django-web" {
     DJANGO_SECRET_KEY = "django_secret_key_TEST"
   })
   depends_on = [docker_registry_image.django_app,
-  aws_eks_addon.efs-csi-driver,
+  aws_eks_addon.s3-csi-driver,
   kubectl_manifest.deployment-postgres]
 }
 resource "kubectl_manifest" "deployment-postgres" {
@@ -93,16 +93,17 @@ resource "kubectl_manifest" "deployment-postgres" {
     DATABASE_USER = "postgres",
     DATABASE_PASSWORD = "postgres",
     })
-  depends_on = [aws_eks_addon.efs-csi-driver,
+  depends_on = [aws_eks_addon.s3-csi-driver,
   aws_eks_node_group.workers,
-  aws_efs_file_system.share-efs]
+  aws_s3_bucket.db_bucket]
 }
 resource "kubectl_manifest" "deployment-web-server" {
   yaml_body = templatefile("manifests/deployments/web-server.yml", {
     STATIC_SERVER_IMAGE = docker_registry_image.static_server.name,
   })
   depends_on = [docker_registry_image.static_server,
-  aws_eks_addon.efs-csi-driver]
+  aws_eks_addon.s3-csi-driver,
+  aws_s3_bucket.static_media_bucket]
 }
 resource "kubectl_manifest" "deployment-efs-monitor" {
   yaml_body = templatefile("manifests/deployments/efs-monitor-pod.yml", {
@@ -110,7 +111,8 @@ resource "kubectl_manifest" "deployment-efs-monitor" {
     DIRECTORY_TO_WATCH = "/mnt/efs/videos",
   })
   depends_on = [docker_registry_image.efs_monitor,
-  aws_eks_addon.efs-csi-driver]
+  aws_eks_addon.s3-csi-driver,
+  aws_s3_bucket.static_media_bucket]
 }
 resource "kubectl_manifest" "django_app_service" {
   yaml_body = file("manifests/services/django-web.yml")
@@ -133,45 +135,21 @@ resource "kubectl_manifest" "ingress" {
   kubectl_manifest.postgres_service]
 }
 
-resource "kubectl_manifest" "efs_pv_monitor" {
-  yaml_body = templatefile("manifests/storage/efs-pv-monitor.yml", {
-    efs_id = aws_efs_file_system.share-efs.id
-  })
-  depends_on = [
-    aws_efs_file_system.share-efs,
-    aws_eks_addon.efs-csi-driver
-  ]
+resource "kubectl_manifest" "s3_storage_class" {
+  yaml_body = file("manifests/storage/s3-storage-class.yml")
+  depends_on = [aws_eks_addon.s3-csi-driver]
 }
-resource "kubectl_manifest" "efs-pv-web" {
-  yaml_body = templatefile("manifests/storage/efs-pv-web.yml", {
-    efs_id = aws_efs_file_system.share-efs.id
-  })
-  depends_on = [
-    aws_efs_file_system.share-efs,
-    aws_eks_addon.efs-csi-driver
-  ]
-}
-resource "kubectl_manifest" "efs-pv-postgres" {
-  yaml_body = templatefile("manifests/storage/efs-pv-postgres.yml", {
-    efs_id = aws_efs_file_system.postgres-efs.id
-  })
-  depends_on = [
-    aws_efs_file_system.postgres-efs,
-    aws_eks_addon.efs-csi-driver
-  ]
-}
-
 resource "kubectl_manifest" "pvc_monitor" {
   yaml_body = file("manifests/storage/pvc-monitor-app.yml")
-  depends_on = [kubectl_manifest.efs_pv_monitor]
+  depends_on = [kubectl_manifest.s3_storage_class]
 }
 
 resource "kubectl_manifest" "pvc_web_server" {
   yaml_body = file("manifests/storage/pvc-web-server.yml")
-  depends_on = [kubectl_manifest.efs-pv-web]
+  depends_on = [kubectl_manifest.s3_storage_class]
 }
 
 resource "kubectl_manifest" "pvc_postgres" {
   yaml_body = file("manifests/storage/pvc-postgres.yml")
-  depends_on = [kubectl_manifest.efs-pv-postgres]
+  depends_on = [kubectl_manifest.s3_storage_class]
 }
