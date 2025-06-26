@@ -110,7 +110,8 @@ resource "kubectl_manifest" "deployment-postgres" {
     DATABASE_PASSWORD = "postgres",
     })
   depends_on = [aws_eks_node_group.workers,
-  kubectl_manifest.pvc_postgres]
+  kubectl_manifest.pvc_postgres
+  ]
 }
 resource "kubectl_manifest" "deployment-web-server" {
   yaml_body = templatefile("manifests/deployments/web-server.yml", {

@@ -22,11 +22,11 @@ spec:
         image: ${STATIC_SERVER_IMAGE}
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "1000m"
+            memory: "150Mi"
+            cpu: "150m"
           limits:
-            memory: "1024Mi"
-            cpu: "2000m"
+            memory: "200Mi"
+            cpu: "250m"
         ports:
         - containerPort: 80
         volumeMounts:

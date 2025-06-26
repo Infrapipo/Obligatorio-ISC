@@ -17,6 +17,7 @@ resource "aws_instance" "nfs_server" {
   instance_type = "t3.medium"
   subnet_id     = module.vpc.public_subnets[0]
   vpc_security_group_ids = [ aws_security_group.nfs_sg.id ]
+  associate_public_ip_address = true
 
   user_data = <<-EOF
               #!/bin/bash
@@ -74,6 +75,47 @@ resource "aws_security_group" "nfs_sg" {
     to_port     = 2049
     protocol    = "tcp"
     security_groups =  [aws_security_group.sg-node-group.id]
+  }
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description      = "NFS UDP"
+    from_port        = 2049
+    to_port          = 2049
+    protocol         = "udp"
+    security_groups  = [ aws_security_group.sg-node-group.id ]
+  }
+  ingress {
+    description      = "RPC portmap TCP"
+    from_port        = 111
+    to_port          = 111
+    protocol         = "tcp"
+    security_groups  = [ aws_security_group.sg-node-group.id ]
+  }
+  ingress {
+    description      = "RPC portmap UDP"
+    from_port        = 111
+    to_port          = 111
+    protocol         = "udp"
+    security_groups  = [ aws_security_group.sg-node-group.id ]
+  }
+  ingress {
+    description      = "mountd (Amazon Linux default) TCP"
+    from_port        = 20048
+    to_port          = 20048
+    protocol         = "tcp"
+    security_groups  = [ aws_security_group.sg-node-group.id ]
+  }
+  ingress {
+    description      = "mountd UDP"
+    from_port        = 20048
+    to_port          = 20048
+    protocol         = "udp"
+    security_groups  = [ aws_security_group.sg-node-group.id ]
   }
   egress {
     from_port   = 0
