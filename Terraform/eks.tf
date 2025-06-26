@@ -84,10 +84,15 @@ resource "kubectl_manifest" "deployment-django-web" {
     DJANGO_SECRET_KEY = "django_secret_key_TEST"
   })
   depends_on = [docker_registry_image.django_app,
-  aws_eks_addon.efs-csi-driver,]
+  aws_eks_addon.efs-csi-driver,
+  kubectl_manifest.deployment-postgres]
 }
 resource "kubectl_manifest" "deployment-postgres" {
-  yaml_body = file("manifests/deployments/postgres.yml")
+  yaml_body = templatefile("manifests/deployments/postgres.yml", {
+    DATABASE_NAME = "obligatorio-isc-DB",
+    DATABASE_USER = "postgres",
+    DATABASE_PASSWORD = "postgres",
+    })
   depends_on = [aws_eks_addon.efs-csi-driver,
   aws_eks_node_group.workers,
   aws_efs_file_system.share-efs]

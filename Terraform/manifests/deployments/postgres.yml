@@ -18,11 +18,11 @@ spec:
           image: postgres:15
           env:
             - name: POSTGRES_DB
-              value: mydb
+              value: ${DATABASE_NAME}
             - name: POSTGRES_USER
-              value: postgres
+              value: ${DATABASE_USER}
             - name: POSTGRES_PASSWORD
-              value: postgres
+              value: ${DATABASE_PASSWORD}
           ports:
             - containerPort: 5432
           resources:
