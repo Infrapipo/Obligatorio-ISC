@@ -21,8 +21,4 @@ spec:
   volumes:
   - name: ec2-volume
     persistentVolumeClaim:
-<<<<<<< HEAD
-      claimName: claim-s3-monitor-app
-=======
       claimName: claim-nfs-monitor-app
->>>>>>> 6b020e965084b1cd88ad27b83672fbff758001ea

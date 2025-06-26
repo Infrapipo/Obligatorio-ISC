@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: claim-s3-postgres
+  name: claim-nfs-postgres
 spec:
   accessModes:
     - ReadWriteMany

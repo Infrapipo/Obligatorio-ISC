@@ -22,10 +22,10 @@ resource "aws_eks_node_group" "workers" {
     max_size     = 3
     min_size     = 1
   }
+  depends_on = [ aws_ec2_instance.nfs_server ]
 }
  resource "aws_launch_template" "lt-node-group" {
-  name_prefix   = "lt-node-group-"
-  image_id      = "ami-05ffe3c48a9991133"
+  name_prefix   = "lt-node-group"
   instance_type = "t3.medium"
   network_interfaces {
     associate_public_ip_address = false
@@ -42,7 +42,7 @@ resource "aws_eks_node_group" "workers" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    # cidr_blocks = [module.vpc.vpc_cidr_block]
+    cidr_blocks = [module.vpc.vpc_cidr_block]
   }
  }
 

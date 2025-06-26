@@ -38,5 +38,5 @@ spec:
       volumes:
         - name: postgres-volume
           persistentVolumeClaim:
-            claimName: claim-s3-postgres
+            claimName: claim-nfs-postgres
          
