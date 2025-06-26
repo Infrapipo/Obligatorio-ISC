@@ -1,11 +1,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: claim-s3-monitor-app
+  name: claim-nfs-monitor-app
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: s3-storage-class
+  volumeName: monitor-pv
+  storageClassName: manual-nfs
   resources:
     requests:
       storage: 20Gi

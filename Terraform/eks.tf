@@ -8,23 +8,44 @@ resource "aws_eks_cluster" "cluster" {
     endpoint_public_access = true
   }
 }
-resource "aws_eks_addon" "s3-csi-driver" {
-  cluster_name             = aws_eks_cluster.cluster.name
-  addon_name               = "aws-mountpoint-s3-csi-driver"
-  service_account_role_arn = data.aws_iam_role.eks_cluster_role.arn
-}
 resource "aws_eks_node_group" "workers" {
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "obligatorio-isc-workers"
   node_role_arn   = aws_eks_cluster.cluster.role_arn
   subnet_ids      = module.vpc.private_subnets
-
+  launch_template {
+    id      = aws_launch_template.lt-node-group.id
+    version = "$Latest"
+  }
   scaling_config {
     desired_size = 2
     max_size     = 3
     min_size     = 1
   }
 }
+ resource "aws_launch_template" "lt-node-group" {
+  name_prefix   = "lt-node-group-"
+  image_id      = "ami-05ffe3c48a9991133"
+  instance_type = "t3.medium"
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups              = [aws_security_group.sg-node-group.id]
+  }
+ }
+ 
+ resource "aws_security_group" "sg-node-group" {
+  name        = "eks-node-group-sg"
+  description = "Security group for EKS node group"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    # cidr_blocks = [module.vpc.vpc_cidr_block]
+  }
+ }
+
 resource "aws_ecr_repository" "respository-ecr" {
   name                 = "obligatorio-isc-repository"
   image_tag_mutability = "MUTABLE"
@@ -64,16 +85,17 @@ resource "docker_registry_image" "django_app" {
   depends_on = [aws_ecr_repository.respository-ecr]
 }
 
-resource "kubectl_manifest" "apply_ingress_controller" {
-
-  yaml_body = file("manifests/ingress-controller.yml")
-
+resource "null_resource" "apply_ingress_controller" {
   depends_on = [
-    aws_eks_addon.s3-csi-driver,
     aws_eks_node_group.workers,
     aws_eks_cluster.cluster,
   ]
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f manifests/ingress-controller.yml"
+  }
 }
+
 resource "kubectl_manifest" "deployment-django-web" {
   yaml_body = templatefile("manifests/deployments/django-web.yml", {
     DJANGO_APP_IMAGE = docker_registry_image.django_app.name,
@@ -84,8 +106,9 @@ resource "kubectl_manifest" "deployment-django-web" {
     DJANGO_SECRET_KEY = "django_secret_key_TEST"
   })
   depends_on = [docker_registry_image.django_app,
-  aws_eks_addon.s3-csi-driver,
-  kubectl_manifest.deployment-postgres]
+  kubectl_manifest.deployment-postgres,
+  kubectl_manifest.pvc_web_server,
+  aws_eks_node_group.workers]
 }
 resource "kubectl_manifest" "deployment-postgres" {
   yaml_body = templatefile("manifests/deployments/postgres.yml", {
@@ -93,17 +116,16 @@ resource "kubectl_manifest" "deployment-postgres" {
     DATABASE_USER = "postgres",
     DATABASE_PASSWORD = "postgres",
     })
-  depends_on = [aws_eks_addon.s3-csi-driver,
-  aws_eks_node_group.workers,
-  aws_s3_bucket.db_bucket]
+  depends_on = [aws_eks_node_group.workers,
+  kubectl_manifest.pvc_postgres]
 }
 resource "kubectl_manifest" "deployment-web-server" {
   yaml_body = templatefile("manifests/deployments/web-server.yml", {
     STATIC_SERVER_IMAGE = docker_registry_image.static_server.name,
   })
   depends_on = [docker_registry_image.static_server,
-  aws_eks_addon.s3-csi-driver,
-  aws_s3_bucket.static_media_bucket]
+  kubectl_manifest.pvc_web_server,
+  aws_eks_node_group.workers]
 }
 resource "kubectl_manifest" "deployment-efs-monitor" {
   yaml_body = templatefile("manifests/deployments/efs-monitor-pod.yml", {
@@ -111,8 +133,8 @@ resource "kubectl_manifest" "deployment-efs-monitor" {
     DIRECTORY_TO_WATCH = "/mnt/efs/videos",
   })
   depends_on = [docker_registry_image.efs_monitor,
-  aws_eks_addon.s3-csi-driver,
-  aws_s3_bucket.static_media_bucket]
+  kubectl_manifest.pvc_monitor,
+  aws_eks_node_group.workers]
 }
 resource "kubectl_manifest" "django_app_service" {
   yaml_body = file("manifests/services/django-web.yml")
@@ -126,8 +148,6 @@ resource "kubectl_manifest" "web_server_service" {
   yaml_body = file("manifests/services/web-server.yml")
   depends_on = [kubectl_manifest.deployment-web-server]
 }
-
-
 resource "kubectl_manifest" "ingress" {
   yaml_body  = file("manifests/ingress.yml")
   depends_on = [kubectl_manifest.django_app_service,
@@ -135,21 +155,3 @@ resource "kubectl_manifest" "ingress" {
   kubectl_manifest.postgres_service]
 }
 
-resource "kubectl_manifest" "s3_storage_class" {
-  yaml_body = file("manifests/storage/s3-storage-class.yml")
-  depends_on = [aws_eks_addon.s3-csi-driver]
-}
-resource "kubectl_manifest" "pvc_monitor" {
-  yaml_body = file("manifests/storage/pvc-monitor-app.yml")
-  depends_on = [kubectl_manifest.s3_storage_class]
-}
-
-resource "kubectl_manifest" "pvc_web_server" {
-  yaml_body = file("manifests/storage/pvc-web-server.yml")
-  depends_on = [kubectl_manifest.s3_storage_class]
-}
-
-resource "kubectl_manifest" "pvc_postgres" {
-  yaml_body = file("manifests/storage/pvc-postgres.yml")
-  depends_on = [kubectl_manifest.s3_storage_class]
-}
