@@ -1,16 +1,16 @@
 resource "kubectl_manifest" "pvc_monitor" {
   yaml_body = file("manifests/storage/pvc-monitor-app.yml")
-  depends_on = [kubectl_manifest.pv_monitor]
+  depends_on = [ kubectl_manifest.storageclass ]
 }
 
 resource "kubectl_manifest" "pvc_web_server" {
   yaml_body = file("manifests/storage/pvc-web-server.yml")
-  depends_on = [kubectl_manifest.pv_web]
+  depends_on = [ kubectl_manifest.storageclass ]
 }
 
 resource "kubectl_manifest" "pvc_postgres" {
   yaml_body = file("manifests/storage/pvc-postgres.yml")
-  depends_on = [kubectl_manifest.pv_postgres]
+  depends_on = [ kubectl_manifest.storageclass ]
 }
 resource "aws_instance" "nfs_server" {
   ami           = "ami-05ffe3c48a9991133" 
@@ -47,23 +47,14 @@ resource "aws_instance" "nfs_server" {
   tags = {
     Name = "nfs-server"
   }
-
 }
 
-resource "kubectl_manifest" "pv_web" {
-  yaml_body = templatefile("manifests/storage/pv-web-server-ec2.yml", {
+
+resource "kubectl_manifest" "storageclass" {
+  yaml_body = templatefile("manifests/storage/storage-class.yml", {
     nfs_server_ip = aws_instance.nfs_server.private_ip
   })
-}
-resource "kubectl_manifest" "pv_monitor" {
-  yaml_body = templatefile("manifests/storage/pv-monitor-ec2.yml", {
-    nfs_server_ip = aws_instance.nfs_server.private_ip
-  })
-}
-resource "kubectl_manifest" "pv_postgres" {
-  yaml_body = templatefile("manifests/storage/pv-postgres-ec2.yml", {
-    nfs_server_ip = aws_instance.nfs_server.private_ip
-  })
+  depends_on = [aws_instance.nfs_server]
 }
 resource "aws_security_group" "nfs_sg" {
   name        = "nfs_sg"

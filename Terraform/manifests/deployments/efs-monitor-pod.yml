@@ -15,10 +15,10 @@ spec:
       limits:
         memory: "128Mi"
         cpu: "100m"
-    volumeMounts:
-      - name: ec2-volume
-        mountPath: ${DIRECTORY_TO_WATCH}
-  volumes:
-  - name: ec2-volume
-    persistentVolumeClaim:
-      claimName: claim-nfs-monitor-app
+  #   volumeMounts:
+  #     - name: ec2-volume
+  #       mountPath: ${DIRECTORY_TO_WATCH}
+  # volumes:
+  # - name: ec2-volume
+  #   persistentVolumeClaim:
+  #     claimName: claim-nfs-monitor-app

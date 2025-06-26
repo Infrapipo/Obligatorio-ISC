@@ -5,8 +5,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  volumeName: monitor-pv
-  storageClassName: manual-nfs
+  storageClassName: nfs-csi
   resources:
     requests:
       storage: 20Gi
