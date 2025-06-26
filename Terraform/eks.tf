@@ -60,15 +60,17 @@ resource "docker_registry_image" "django_app" {
   depends_on = [aws_ecr_repository.respository-ecr]
 }
 
-resource "kubectl_manifest" "apply_ingress_controller" {
-
-  yaml_body = file("manifests/ingress-controller.yml")
-
+resource "null_resource" "apply_ingress_controller" {
   depends_on = [
     aws_eks_node_group.workers,
     aws_eks_cluster.cluster,
   ]
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f manifests/ingress-controller.yml"
+  }
 }
+
 resource "kubectl_manifest" "deployment-django-web" {
   yaml_body = templatefile("manifests/deployments/django-web.yml", {
     DJANGO_APP_IMAGE = docker_registry_image.django_app.name,
@@ -80,7 +82,8 @@ resource "kubectl_manifest" "deployment-django-web" {
   })
   depends_on = [docker_registry_image.django_app,
   kubectl_manifest.deployment-postgres,
-  kubectl_manifest.pvc_web_server]
+  kubectl_manifest.pvc_web_server,
+  aws_eks_node_group.workers]
 }
 resource "kubectl_manifest" "deployment-postgres" {
   yaml_body = templatefile("manifests/deployments/postgres.yml", {
@@ -96,7 +99,8 @@ resource "kubectl_manifest" "deployment-web-server" {
     STATIC_SERVER_IMAGE = docker_registry_image.static_server.name,
   })
   depends_on = [docker_registry_image.static_server,
-  kubectl_manifest.pvc_web_server,]
+  kubectl_manifest.pvc_web_server,
+  aws_eks_node_group.workers]
 }
 resource "kubectl_manifest" "deployment-efs-monitor" {
   yaml_body = templatefile("manifests/deployments/efs-monitor-pod.yml", {
@@ -105,7 +109,7 @@ resource "kubectl_manifest" "deployment-efs-monitor" {
   })
   depends_on = [docker_registry_image.efs_monitor,
   kubectl_manifest.pvc_monitor,
-]
+  aws_eks_node_group.workers]
 }
 resource "kubectl_manifest" "django_app_service" {
   yaml_body = file("manifests/services/django-web.yml")
@@ -142,8 +146,6 @@ resource "kubectl_manifest" "pvc_postgres" {
   yaml_body = file("manifests/storage/pvc-postgres.yml")
   depends_on = [kubectl_manifest.pv_postgres]
 }
-
-
 resource "aws_instance" "nfs_server" {
   ami           = "ami-05ffe3c48a9991133" # Amazon Linux 2, región us-east-1
   instance_type = "t2.micro"

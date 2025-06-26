@@ -44,7 +44,7 @@ spec:
           value: "${DJANGO_SECRET_KEY}"
         volumeMounts:
         - name: static-files
-          mountPath: /app/static   # o /app/media si lo usás así
+          mountPath: /app/static   
       volumes:
       - name: static-files
         persistentVolumeClaim:
