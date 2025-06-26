@@ -76,7 +76,12 @@ resource "kubectl_manifest" "apply_ingress_controller" {
 }
 resource "kubectl_manifest" "deployment-django-web" {
   yaml_body = templatefile("manifests/deployments/django-web.yml", {
-    DJANGO_APP_IMAGE    = docker_registry_image.django_app.name,
+    DJANGO_APP_IMAGE = docker_registry_image.django_app.name,
+    DATABASE_NAME = "obligatorio-isc-DB",
+    DATABASE_USER = "postgres",
+    DATABASE_PASSWORD = "postgres",
+    DATABASE_PORT = "5432",
+    DJANGO_SECRET_KEY = "django_secret_key_TEST"
   })
   depends_on = [docker_registry_image.django_app,
   aws_eks_addon.efs-csi-driver,]
@@ -104,7 +109,6 @@ resource "kubectl_manifest" "deployment-efs-monitor" {
 resource "kubectl_manifest" "django_app_service" {
   yaml_body = file("manifests/services/django-web.yml")
   depends_on = [kubectl_manifest.deployment-django-web]
-  
 }
 resource "kubectl_manifest" "postgres_service" {
   yaml_body = file("manifests/services/postgres.yml")
