@@ -9,7 +9,6 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   storageClassName: nfs-manual
-  storageClassName: manual-nfs
   mountOptions:
     - nolock
   nfs:
