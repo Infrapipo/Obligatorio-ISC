@@ -1,10 +1,16 @@
 FROM nginx:latest
 
+# Instalar nfs-common
+RUN apt-get update && \
+    apt-get install -y nfs-common && \
+    rm -rf /var/lib/apt/lists/*
+
 # Crear los directorios necesarios
-RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /mnt/efs 
+RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /mnt/efs/static
 
+# Copiar configuración del sitio nginx
 COPY streaming_project /etc/nginx/sites-available/streaming_project
-
-COPY /static /mnt/efs/static
-
 RUN ln -s /etc/nginx/sites-available/streaming_project /etc/nginx/sites-enabled/
+
+# Copiar archivos estáticos (solo si querés precargar algo en la imagen)
+COPY /static /mnt/efs/static

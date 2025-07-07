@@ -124,7 +124,8 @@ resource "kubectl_manifest" "deployment-web-server" {
 resource "kubectl_manifest" "deployment-efs-monitor" {
   yaml_body = templatefile("manifests/deployments/efs-monitor-pod.yml", {
     EFS_MONITOR_IMAGE   = docker_registry_image.efs_monitor.name,
-    DIRECTORY_TO_WATCH = "/mnt/efs/videos"
+    DIRECTORY_TO_WATCH = "/mnt/efs/videos",
+    nfs_server_ip = aws_instance.nfs_server.private_ip,
   })
   depends_on = [docker_registry_image.efs_monitor,
   kubectl_manifest.pvc_monitor,
