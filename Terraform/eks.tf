@@ -37,6 +37,12 @@ resource "aws_security_group" "sg-node-group" {
     protocol    = "-1"
     cidr_blocks = [module.vpc.vpc_cidr_block]
   }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
  }
 
 resource "aws_ecr_repository" "respository-ecr" {
@@ -88,16 +94,6 @@ resource "null_resource" "apply_ingress_controller" {
     command = "kubectl apply -f manifests/ingress-controller.yml"
   }
 }
-# resource "null_resource" "install_nfs_csi_driver" {
-#   depends_on = [
-#     aws_eks_node_group.workers,
-#     aws_eks_cluster.cluster,
-#   ]
-
-#   provisioner "local-exec" {
-#     command = "curl -skSL https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/install-driver.sh | bash -s master --"
-#   }
-# }
 
 resource "kubectl_manifest" "deployment-django-web" {
   yaml_body = templatefile("manifests/deployments/django-web.yml", {

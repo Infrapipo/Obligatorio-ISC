@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-nfs
+spec:
+  hostNetwork: true
+  hostPID: true
+  nodeName: ip-10-0-3-10.ec2.internal  # Cambia por el nodo donde falla el mount
+  containers:
+    - name: shell
+      image: debian:bookworm-slim
+      securityContext:
+        privileged: true
+      command: ["sleep", "3600"]
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "50m"
+        limits:
+          memory: "128Mi"
+          cpu: "100m"

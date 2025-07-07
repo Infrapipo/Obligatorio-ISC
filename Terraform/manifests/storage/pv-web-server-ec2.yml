@@ -8,11 +8,7 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: nfs-manual
-  mountOptions:
-    - nolock
   nfs:
     server: "${nfs_server_ip}"        # IP privada de EC2 NFS
     path: /srv/nfs/kubedata/media
-    readOnly: false
     

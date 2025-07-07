@@ -1,16 +1,34 @@
+resource "kubectl_manifest" "pv_monitor" {
+  yaml_body = templatefile("manifests/storage/pv-monitor-ec2.yml", {
+    nfs_server_ip = aws_instance.nfs_server.private_ip
+  })
+  depends_on = [aws_instance.nfs_server]
+}
+resource "kubectl_manifest" "pv_postgres" {
+  yaml_body = templatefile("manifests/storage/pv-postgres-ec2.yml", {
+    nfs_server_ip = aws_instance.nfs_server.private_ip
+  })
+  depends_on = [aws_instance.nfs_server]
+}
+resource "kubectl_manifest" "pv_web_server" {
+  yaml_body = templatefile("manifests/storage/pv-web-server-ec2.yml", {
+    nfs_server_ip = aws_instance.nfs_server.private_ip
+  })
+  depends_on = [aws_instance.nfs_server]
+}
 resource "kubectl_manifest" "pvc_monitor" {
   yaml_body = file("manifests/storage/pvc-monitor-app.yml")
-  depends_on = [ kubectl_manifest.storageclass ]
+  depends_on = [ kubectl_manifest.pv_monitor ]
 }
 
 resource "kubectl_manifest" "pvc_web_server" {
   yaml_body = file("manifests/storage/pvc-web-server.yml")
-  depends_on = [ kubectl_manifest.storageclass ]
+  depends_on = [ kubectl_manifest.pv_web_server ]
 }
 
 resource "kubectl_manifest" "pvc_postgres" {
   yaml_body = file("manifests/storage/pvc-postgres.yml")
-  depends_on = [ kubectl_manifest.storageclass ]
+  depends_on = [ kubectl_manifest.pv_postgres ]
 }
 
 resource "aws_instance" "nfs_server" {
@@ -50,13 +68,6 @@ resource "aws_instance" "nfs_server" {
   }
 }
 
-
-resource "kubectl_manifest" "storageclass" {
-  yaml_body = templatefile("manifests/storage/storage-class.yml", {
-    nfs_server_ip = aws_instance.nfs_server.private_ip
-  })
-  depends_on = [aws_instance.nfs_server]
-}
 resource "aws_security_group" "nfs_sg" {
   name        = "nfs_sg"
   description = "Security group for NFS server"
@@ -66,48 +77,7 @@ resource "aws_security_group" "nfs_sg" {
     from_port   = 2049
     to_port     = 2049
     protocol    = "tcp"
-    security_groups =  [aws_security_group.sg-node-group.id]
-  }
-  ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    description      = "NFS UDP"
-    from_port        = 2049
-    to_port          = 2049
-    protocol         = "udp"
-    security_groups  = [ aws_security_group.sg-node-group.id ]
-  }
-  ingress {
-    description      = "RPC portmap TCP"
-    from_port        = 111
-    to_port          = 111
-    protocol         = "tcp"
-    security_groups  = [ aws_security_group.sg-node-group.id ]
-  }
-  ingress {
-    description      = "RPC portmap UDP"
-    from_port        = 111
-    to_port          = 111
-    protocol         = "udp"
-    security_groups  = [ aws_security_group.sg-node-group.id ]
-  }
-  ingress {
-    description      = "mountd (Amazon Linux default) TCP"
-    from_port        = 20048
-    to_port          = 20048
-    protocol         = "tcp"
-    security_groups  = [ aws_security_group.sg-node-group.id ]
-  }
-  ingress {
-    description      = "mountd UDP"
-    from_port        = 20048
-    to_port          = 20048
-    protocol         = "udp"
-    security_groups  = [ aws_security_group.sg-node-group.id ]
   }
   egress {
     from_port   = 0
