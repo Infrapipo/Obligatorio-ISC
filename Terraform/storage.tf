@@ -12,6 +12,7 @@ resource "kubectl_manifest" "pvc_postgres" {
   yaml_body = file("manifests/storage/pvc-postgres.yml")
   depends_on = [ kubectl_manifest.storageclass ]
 }
+
 resource "aws_instance" "nfs_server" {
   ami           = "ami-05ffe3c48a9991133" 
   instance_type = "t3.medium"

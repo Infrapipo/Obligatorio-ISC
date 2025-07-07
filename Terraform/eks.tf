@@ -88,6 +88,16 @@ resource "null_resource" "apply_ingress_controller" {
     command = "kubectl apply -f manifests/ingress-controller.yml"
   }
 }
+# resource "null_resource" "install_nfs_csi_driver" {
+#   depends_on = [
+#     aws_eks_node_group.workers,
+#     aws_eks_cluster.cluster,
+#   ]
+
+#   provisioner "local-exec" {
+#     command = "curl -skSL https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/install-driver.sh | bash -s master --"
+#   }
+# }
 
 resource "kubectl_manifest" "deployment-django-web" {
   yaml_body = templatefile("manifests/deployments/django-web.yml", {
